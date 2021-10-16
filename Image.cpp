@@ -701,7 +701,7 @@ Image Image :: resizeImage(int row,int col){
   float original_row , original_col ;
   int i,j ;
 
-  // These for genarating 4 pixel from 1 pixel
+  // These for genarating pixels from 1 pixel
   float partitions2Row,partitions2Col ;
 
   //look at all pixels and   
@@ -711,12 +711,190 @@ Image Image :: resizeImage(int row,int col){
       partitions2Col = (int)floor(j*col_ratio);
       temp(i,j) = this->getPix(partitions2Row,partitions2Col);
     }
+  }
+  return temp ;
+}
+
+Image Image :: HistogramEqualization(){
+  
+  float histogramGray[256] = {0};
+  int i,j ;
+  Image temp ;
+  
+  for(i=0;i<this->getRow();i++){
+    for(j=0;j<this->getCol();j++){
+      histogramGray[ (int)this->getPix(i,j)  ]++  ;
+    }}
     
+  int kumulatifHistogram[256] = {0};
+  float sum = 0;
+  for(i=0;i<256;i++){
+    kumulatifHistogram[i] = sum + histogramGray[i];
+    sum = kumulatifHistogram[i];
+  }
+  //Normalized values
+  float NorKumulatifHistogram[256] = {0.0};
+  for(i=0;i<256;i++){
+    //can be changed brightness of image
+    int maxPixelVal = 255 ;
+    NorKumulatifHistogram[i] = (kumulatifHistogram[i]/sum)*maxPixelVal ; 
   }
 
+  //copy 
+  temp = *this ;
+
+  //assign new values of pixels correspond to original pixels
+  for(i=0;i<this->getRow();i++){
+    for(j=0;j<this->getCol();j++){
+      temp(i,j) =  NorKumulatifHistogram[(int)this->getPix(i,j)]; 
+    }}
+  return temp;
+}
+//This function apply the kernel matrix to one pixel which is on image.
+//Implementation to 3x3 kernel
+float Image :: PutFilterOnPoint_3x3(int PixelIndexX,int PixelIndexY,float KernelMatrix[3][3]){
+  float neighborPixels[3][3] = {{0}} ;
+  int i,j;
+  for(i=-1;i<2;i++){
+    for(j=-1;j<2;j++){    
+      //when getting borders, algorithm add 0s for out of image
+      if( ((PixelIndexX+i)>=0 && (PixelIndexY+j)>=0)     &&   ((PixelIndexX+i < this->getRow()) && (PixelIndexY+j < this->getCol())))
+        neighborPixels[i+1][j+1] = this->getPix(PixelIndexX+i,PixelIndexY+j);
+      else
+        neighborPixels[i+1][j+1] = 0 ;
+    }}
+
+  //apply filter for the point-- cross filter and pixel values and sum up all of them 
+  float sum = 0 ;
+  for(i=0;i<3;i++){
+    for(j=0;j<3;j++){
+      sum += (neighborPixels[i][j] * KernelMatrix[i][j]);
+    }}
+
+  cout<<sum ; 
+
+  // to test
+  for(i=0;i<3;i++)
+    for(j=0;j<3;j++)
+      cout<<neighborPixels[i][j]<<"\n" ;
+
+
+  return sum ;
+
+}
+//This function apply the kernel matrix to one pixel which is on image.
+//Implementation to 5x5 kernel
+float Image :: PutFilterOnPoint_5x5(int PixelIndexX,int PixelIndexY,float KernelMatrix[5][5]){
+  float neighborPixels[5][5] = {{0}} ;
+  int i,j;
+  for(i=-1;i<4;i++){
+    for(j=-1;j<4;j++){    
+      //when getting borders, algorithm add 0s for out of image
+      if( ((PixelIndexX+i)>=0 && (PixelIndexY+j)>=0)     &&   ((PixelIndexX+i < this->getRow()) && (PixelIndexY+j < this->getCol())))
+        neighborPixels[i+1][j+1] = this->getPix(PixelIndexX+i,PixelIndexY+j);
+      else
+        neighborPixels[i+1][j+1] = 0 ;
+    }}
+
+  //apply filter for the point-- cross filter and pixel values and sum up all of them 
+  float sum = 0 ;
+  for(i=0;i<5;i++){
+    for(j=0;j<5;j++){
+      sum += (neighborPixels[i][j] * KernelMatrix[i][j]);
+    }}
+
+  cout<<sum ; 
+
+  // to test
+  for(i=0;i<5;i++)
+    for(j=0;j<5;j++)
+      cout<<neighborPixels[i][j]<<"\n" ;
+
+
+  return sum ;
+
+}
+//I got from https://www.geeksforgeeks.org/gaussian-filter-generation-c/
+//can be defined with hand but this is more flexible 
+void CreateGaussFilter_5x5(float GKernel[][5])
+{
+    // initialising standard deviation to 1.0
+    double sigma = 1.0;
+    double r, s = 2.0 * sigma * sigma;
+ 
+    // sum is for normalization
+    double sum = 0.0;
+  
+    // generating 5x5 kernel
+    for (int x = -2; x <= 2; x++) {
+        for (int y = -2; y <= 2; y++) {
+            r = sqrt(x * x + y * y);
+            GKernel[x + 2][y + 2] = (exp(-(r * r) / s)) / (M_PI * s);
+            sum += GKernel[x + 2][y + 2];
+        }
+    }
+ 
+    // normalizing the Kernel
+    for (int i = 0; i < 5; ++i)
+        for (int j = 0; j < 5; ++j)
+            GKernel[i][j] /= sum;
+}
+//Laplacian Filter can be used for sharping
+//this is 3x3
+Image Image :: LaplacianFilter(){
+  
+  Image temp(this->getRow(),this->getCol()) ;
+  //Laplacian kernel
+  float KernelMatrix[3][3] = {{1,1,1},{1,-8,1},{1,1,1}};
+  int i,j ;
+  float filteredValue ;
+  //walk on each pixel and apply the filter with PutFilterOnPoint_5x5 
+  for(i=0;i<this->getRow();i++){
+    for(j=0;j<this->getCol();j++){
+        filteredValue = this->PutFilterOnPoint_3x3(i,j,KernelMatrix);
+        temp(i,j) = this->getPix(i,j) - filteredValue ;
+    }}
+  return temp ;
+}
+//Gaussian Filter can be used to blur an image.
+//this is 5x5.But can implemented easily for different sizes with change into function
+Image Image :: GaussFilt_5x5(){
+  Image temp(this->getRow(),this->getCol()) ;
+  float gKernel[5][5];
+  //create an Gaussian kernel
+  CreateGaussFilter_5x5(gKernel);
+  int i,j ;
+  float filteredValue ;
+  //walk on each pixel and apply the filter with PutFilterOnPoint_5x5 
+  for(i=0;i<this->getRow();i++){
+    for(j=0;j<this->getCol();j++){
+        filteredValue = this->PutFilterOnPoint_5x5(i,j,gKernel);
+        temp(i,j) = filteredValue ;
+    }}
   return temp ;
 
 }
+
+Image Image :: HighBoostFilter(int k){
+  //if k == 1 called unsharp process
+  //3 steps to create result image
+  // result(x,y) = mask(x,y) + k*blured(x,y)
+  Image blured(this->getRow(),this->getCol()) ;
+  Image mask(this->getRow(),this->getCol()) ;
+  Image result(this->getRow(),this->getCol()) ;
+  //apply 5x5 gauss kernel
+  blured = this->GaussFilt_5x5();
+  int i,j ;
+  for(i=0;i<this->getRow();i++){
+    for(j=0;j<this->getCol();j++){
+      mask(i,j) = this->getPix(i,j) -  blured.getPix(i,j);
+      result(i,j) = this->getPix(i,j) + k*mask.getPix(i,j);
+
+    }
+  }
+  return result;
+}
+
 
 
   //END OF YOUR FUNCTIONS //

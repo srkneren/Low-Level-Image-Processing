@@ -10,22 +10,30 @@ using namespace std;
 int main(int argc, char **argv)
 {
   
-  char inputFileName[] = "lena.pgm" ;
-  char outputFileName[] = "resized-lena.pgm";
+  
+   
+  
+  
+  
+  
+  
+  char inputFileName[] = "Fig0338(a)(blurry_moon).pgm" ;
+  char outputFileName[] = "histogramli.pgm";
   Image inputImage ;
   Image outputImage ;
   inputImage.readImage(inputFileName);
-  outputImage =  inputImage.resizeImage(inputImage.getRow()*5,inputImage.getCol());
+  outputImage =  inputImage.HighBoostFilter(5);
   outputImage.writeImage(outputFileName);
-  
-  
-  
-  
-  
-  
-  
-  
-  
+
+
+
+  // char inputFileName[] = "lena.pgm" ;
+  // char outputFileName[] = "resized-lena.pgm";
+  // Image inputImage ;
+  // Image outputImage ;
+  // inputImage.readImage(inputFileName);
+  // outputImage =  inputImage.resizeImage(inputImage.getRow()*5,inputImage.getCol());
+  // outputImage.writeImage(outputFileName);
   
   
   
@@ -59,6 +67,10 @@ int main(int argc, char **argv)
   //   }
   //   cout<<"\n" ;
   // }
+
+  // float a[3][3] = {{1,1,1},{1,-8,1},{1,1,1}};
+  // createImage.PutFilterOnPoint(createImage.getRow()-1,createImage.getCol()-1,a);
+
   // createImage.writeImage(outputFileName);
   // resizedImage = createImage.resizeImage(20,30);
   // resizedImage.writeImage(resizedImageName) ;

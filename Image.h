@@ -79,6 +79,13 @@ class Image {
 Image thresholdImage(float threshold = 127.0, float lowValue = 0.0, float highValue = 255.0);
 Image ThresholdFunc(int th = 135);
 Image resizeImage(int row,int col);
+Image HistogramEqualization();
+float PutFilterOnPoint_3x3(int PixelIndexX,int PixelIndexY,float FilterMatrix[3][3]);
+float PutFilterOnPoint_5x5(int PixelIndexX,int PixelIndexY,float FilterMatrix[5][5]);
+Image LaplacianFilter();
+Image GaussFilt_5x5();
+Image HighBoostFilter(int k=1);
+
   // END OF YOUR MEMBER FUNCTIONS//
 
  private:
@@ -96,6 +103,6 @@ Image resizeImage(int row,int col);
   void writeImage(Image &,             // write an image
                 char *,
                 int flag = 0);         // flag for rescale, rescale when == 1
-
+void CreateGaussFilter_5x5(double GKernel[][5]);
 
 #endif
